@@ -91,8 +91,11 @@ import org.apache.hadoop.hive.ql.metadata.HiveMetaStoreChecker;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
+import org.apache.hadoop.hive.ql.metadata.JsonMetaDataFormatter;
 import org.apache.hadoop.hive.ql.metadata.MetaDataFormatUtils;
+import org.apache.hadoop.hive.ql.metadata.MetaDataFormatter;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.TextMetaDataFormatter;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.AlterTablePartMergeFilesDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
@@ -166,6 +169,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
   private static String INTERMEDIATE_ORIGINAL_DIR_SUFFIX;
   private static String INTERMEDIATE_EXTRACTED_DIR_SUFFIX;
 
+  private MetaDataFormatter formatter;
+
   @Override
   public boolean requireLock() {
     return this.work != null && this.work.getNeedLock();
@@ -179,6 +184,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
   public void initialize(HiveConf conf, QueryPlan queryPlan, DriverContext ctx) {
     super.initialize(conf, queryPlan, ctx);
     this.conf = conf;
+
+    formatter = new JsonMetaDataFormatter();
 
     INTERMEDIATE_ARCHIVED_DIR_SUFFIX =
       HiveConf.getVar(conf, ConfVars.METASTORE_INT_ARCHIVED);
@@ -2573,7 +2580,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           if (tableName.equals(colPath)) {
             cols.addAll(tbl.getPartCols());
           }
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
+          outStream.writeBytes(formatter.displayColsUnformatted(cols));
         } else {
           outStream.writeBytes(
             MetaDataFormatUtils.getAllColumnsInformation(cols,
@@ -2584,7 +2591,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
         if (descTbl.isFormatted()) {
           outStream.writeBytes(MetaDataFormatUtils.getAllColumnsInformation(cols));
         } else {
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
+          outStream.writeBytes(formatter.displayColsUnformatted(cols));
         }
       }
 
