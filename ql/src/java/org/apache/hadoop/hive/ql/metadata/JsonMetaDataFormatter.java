@@ -18,38 +18,277 @@
 
 package org.apache.hadoop.hive.ql.metadata;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.apache.hadoop.fs.Path;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.hive.ql.metadata.Table;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * Format table and index information for machine readability using
  * json.
  */
 public class JsonMetaDataFormatter implements MetaDataFormatter {
-    public String displayColsUnformatted(List<FieldSchema> cols)
+    private static final Log LOG = LogFactory.getLog("hive.ql.exec.DDLTask");
+
+    /**
+     * Write error message.
+     */
+    public void error(DataOutputStream out, String msg)
         throws HiveException
     {
-        StringBuilder colBuffer = new StringBuilder(8192);
-        colBuffer.append("{ \"columns\": [\n");
-        boolean first = true;
-        for (FieldSchema col : cols) {
-            if (! first)
-                colBuffer.append("  ,\n");
-            first = false;
-            colBuffer.append("  {");
-            colBuffer.append("\"name\": \"");
-            colBuffer.append(col.getName());
-            colBuffer.append("\",");
-            colBuffer.append("\"type\": \"");
-            colBuffer.append(col.getType());
-            colBuffer.append("\",");
-            colBuffer.append("\"comment\": \"");
-            colBuffer.append(col.getComment() == null ? "" : col.getComment());
-            colBuffer.append("\"");
-            colBuffer.append("}\n");
-        }
-        colBuffer.append("] }");
-        return colBuffer.toString();
+        asJson(out,
+               MapBuilder.create()
+               .put("error", msg)
+               .build());
     }
-}
 
+    /**
+     * Describe table.
+     */
+    public void describeTable(DataOutputStream out,
+                              String colPath, String tableName,
+                              Table tbl, Partition part, List<FieldSchema> cols,
+                              boolean isFormatted, boolean isExt)
+        throws HiveException
+    {
+        MapBuilder builder = MapBuilder.create();
+
+        builder.put("columns", makeColsUnformatted(cols));
+
+        if (isExt) {
+            if (part != null)
+                builder.put("partition", part.getTPartition());
+            else
+                builder.put("table", tbl.getTTable());
+        }
+
+        asJson(out, builder.build());
+    }
+
+    private List makeColsUnformatted(List<FieldSchema> cols) {
+        ArrayList res = new ArrayList();
+        for (FieldSchema col : cols)
+            res.add(makeOneColUnformatted(col));
+        return res;
+    }
+
+    private Map makeOneColUnformatted(FieldSchema col) {
+        return MapBuilder.create()
+            .put("name", col.getName())
+            .put("type", col.getType())
+            .put("comment", col.getComment())
+            .build();
+    }
+
+    public void showTableStatus(DataOutputStream out,
+                                Hive db,
+                                HiveConf conf,
+                                List<Table> tbls,
+                                Map<String, String> part,
+                                Partition par)
+        throws HiveException
+    {
+        asJson(out, MapBuilder
+               .create()
+               .put("tables", makeAllTableStatus(db, conf,
+                                                 tbls, part, par))
+               .build());
+    }
+
+    private List makeAllTableStatus(Hive db,
+                                    HiveConf conf,
+                                    List<Table> tbls,
+                                    Map<String, String> part,
+                                    Partition par)
+        throws HiveException
+    {
+        try {
+            ArrayList res = new ArrayList();
+            for (Table tbl : tbls)
+                res.add(makeOneTableStatus(tbl, db, conf, part, par));
+            return res;
+        } catch(IOException e) {
+            throw new HiveException(e);
+        }
+    }
+
+    private Map makeOneTableStatus(Table tbl,
+                                   Hive db,
+                                   HiveConf conf,
+                                   Map<String, String> part,
+                                   Partition par)
+        throws HiveException, IOException
+    {
+        String tblLoc = null;
+        String inputFormattCls = null;
+        String outputFormattCls = null;
+        if (part != null) {
+          if (par != null) {
+            if (par.getLocation() != null) {
+              tblLoc = par.getDataLocation().toString();
+            }
+            inputFormattCls = par.getInputFormatClass().getName();
+            outputFormattCls = par.getOutputFormatClass().getName();
+          }
+        } else {
+          if (tbl.getPath() != null) {
+            tblLoc = tbl.getDataLocation().toString();
+          }
+          inputFormattCls = tbl.getInputFormatClass().getName();
+          outputFormattCls = tbl.getOutputFormatClass().getName();
+        }
+
+        MapBuilder builder = MapBuilder.create();
+
+        builder.put("tableName", tbl.getTableName());
+        builder.put("owner", tbl.getOwner());
+        builder.put("location", tblLoc);
+        builder.put("inputformat", inputFormattCls);
+        builder.put("outputformat", outputFormattCls);
+        builder.put("columns", makeColsUnformatted(tbl.getCols()));
+
+        builder.put("partitioned", tbl.isPartitioned());
+        if (tbl.isPartitioned())
+            builder.put("partitionColumns", makeColsUnformatted(tbl.getPartCols()));
+
+        putFileSystemsStats(builder, makeTableStatusLocations(tbl, db, par),
+                            conf, tbl.getPath());
+
+        return builder.build();
+    }
+
+    private List<Path> makeTableStatusLocations(Table tbl, Hive db, Partition par)
+        throws HiveException
+    {
+        // output file system information
+        Path tblPath = tbl.getPath();
+        List<Path> locations = new ArrayList<Path>();
+        if (tbl.isPartitioned()) {
+          if (par == null) {
+            for (Partition curPart : db.getPartitions(tbl)) {
+              if (curPart.getLocation() != null) {
+                locations.add(new Path(curPart.getLocation()));
+              }
+            }
+          } else {
+            if (par.getLocation() != null) {
+              locations.add(new Path(par.getLocation()));
+            }
+          }
+        } else {
+          if (tblPath != null) {
+            locations.add(tblPath);
+          }
+        }
+
+        return locations;
+    }
+
+    // Duplicates logic in TextMetaDataFormatter
+    private void putFileSystemsStats(MapBuilder builder, List<Path> locations,
+                                     HiveConf conf, Path tblPath)
+        throws IOException
+    {
+      long totalFileSize = 0;
+      long maxFileSize = 0;
+      long minFileSize = Long.MAX_VALUE;
+      long lastAccessTime = 0;
+      long lastUpdateTime = 0;
+      int numOfFiles = 0;
+
+      boolean unknown = false;
+      FileSystem fs = tblPath.getFileSystem(conf);
+      // in case all files in locations do not exist
+      try {
+        FileStatus tmpStatus = fs.getFileStatus(tblPath);
+        lastAccessTime = ShimLoader.getHadoopShims().getAccessTime(tmpStatus);
+        lastUpdateTime = tmpStatus.getModificationTime();
+      } catch (IOException e) {
+        LOG.warn(
+            "Cannot access File System. File System status will be unknown: ", e);
+        unknown = true;
+      }
+
+      if (!unknown) {
+        for (Path loc : locations) {
+          try {
+            FileStatus status = fs.getFileStatus(tblPath);
+            FileStatus[] files = fs.listStatus(loc);
+            long accessTime = ShimLoader.getHadoopShims().getAccessTime(status);
+            long updateTime = status.getModificationTime();
+            // no matter loc is the table location or part location, it must be a
+            // directory.
+            if (!status.isDir()) {
+              continue;
+            }
+            if (accessTime > lastAccessTime) {
+              lastAccessTime = accessTime;
+            }
+            if (updateTime > lastUpdateTime) {
+              lastUpdateTime = updateTime;
+            }
+            for (FileStatus currentStatus : files) {
+              if (currentStatus.isDir()) {
+                continue;
+              }
+              numOfFiles++;
+              long fileLen = currentStatus.getLen();
+              totalFileSize += fileLen;
+              if (fileLen > maxFileSize) {
+                maxFileSize = fileLen;
+              }
+              if (fileLen < minFileSize) {
+                minFileSize = fileLen;
+              }
+              accessTime = ShimLoader.getHadoopShims().getAccessTime(
+                  currentStatus);
+              updateTime = currentStatus.getModificationTime();
+              if (accessTime > lastAccessTime) {
+                lastAccessTime = accessTime;
+              }
+              if (updateTime > lastUpdateTime) {
+                lastUpdateTime = updateTime;
+              }
+            }
+          } catch (IOException e) {
+            // ignore
+          }
+        }
+      }
+
+      builder
+          .put("totalNumberFiles", numOfFiles, ! unknown)
+          .put("totalFileSize",    totalFileSize, ! unknown)
+          .put("maxFileSize",      maxFileSize, ! unknown)
+          .put("minFileSize",      numOfFiles > 0 ? minFileSize : 0, ! unknown)
+          .put("lastAccessTime",   lastAccessTime, ! (unknown  || lastAccessTime < 0))
+          .put("lastUpdateTime",   lastUpdateTime, ! unknown);
+    }
+
+    /**
+     * Convert the map to a JSON string.
+     */
+    public void asJson(DataOutputStream out, Map data)
+        throws HiveException
+    {
+        try {
+            new ObjectMapper().writeValue(out, data);
+        } catch (IOException e) {
+            throw new HiveException("Unable to convert to json", e);
+        }
+    }
+
+}

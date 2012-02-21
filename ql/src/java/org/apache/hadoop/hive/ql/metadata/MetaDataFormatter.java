@@ -18,8 +18,14 @@
 
 package org.apache.hadoop.hive.ql.metadata;
 
+import java.io.DataOutputStream;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 
 /**
  * Interface to format table and index information.  We can format it
@@ -27,7 +33,30 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
  * (json).
  */
 public interface MetaDataFormatter {
-    public String displayColsUnformatted(List<FieldSchema> cols)
+    /**
+     * Write error message.
+     */
+    public void error(DataOutputStream out, String msg)
+        throws HiveException;
+
+    /**
+     * Describe table.
+     */
+    public void describeTable(DataOutputStream out,
+                              String colPath, String tableName,
+                              Table tbl, Partition part, List<FieldSchema> cols,
+                              boolean isFormatted, boolean isExt)
+        throws HiveException;
+
+    /**
+     * Show the table status.
+     */
+    public void showTableStatus(DataOutputStream out,
+                                Hive db,
+                                HiveConf conf,
+                                List<Table> tbls,
+                                Map<String, String> part,
+                                Partition par)
         throws HiveException;
 }
 
