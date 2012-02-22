@@ -24,16 +24,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.hadoop.fs.Path;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.shims.ShimLoader;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -42,6 +43,19 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class JsonMetaDataFormatter implements MetaDataFormatter {
     private static final Log LOG = LogFactory.getLog("hive.ql.exec.DDLTask");
+
+    /**
+     * Convert the map to a JSON string.
+     */
+    public void asJson(DataOutputStream out, Map data)
+        throws HiveException
+    {
+        try {
+            new ObjectMapper().writeValue(out, data);
+        } catch (IOException e) {
+            throw new HiveException("Unable to convert to json", e);
+        }
+    }
 
     /**
      * Write error message.
@@ -279,16 +293,39 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     }
 
     /**
-     * Convert the map to a JSON string.
+     * Show the table partitions.
      */
-    public void asJson(DataOutputStream out, Map data)
+    public void showTablePartitons(DataOutputStream out, List<String> parts)
         throws HiveException
     {
-        try {
-            new ObjectMapper().writeValue(out, data);
-        } catch (IOException e) {
-            throw new HiveException("Unable to convert to json", e);
-        }
+        asJson(out,
+               MapBuilder.create()
+               .put("partitions", makeTablePartions(parts))
+               .build());
     }
 
+    private List makeTablePartions(List<String> parts) {
+        ArrayList res = new ArrayList();
+        for (String part : parts)
+            res.add(makeOneTablePartition(part));
+        return res;
+    }
+
+    // This seems like a very wrong implementation.
+    private Map makeOneTablePartition(String part) {
+        String name = part;
+        String val = null;
+
+        String[] kv = StringUtils.split(part, "=", 2);
+        if (kv != null) {
+            name = kv[0];
+            if (kv.length > 1)
+                val = kv[1];
+        }
+
+        return MapBuilder.create()
+            .put("columnName", name)
+            .put("columnValue", val)
+            .build();
+    }
 }

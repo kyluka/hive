@@ -58,5 +58,12 @@ public interface MetaDataFormatter {
                                 Map<String, String> part,
                                 Partition par)
         throws HiveException;
+
+    /**
+     * Show the table partitions.
+     */
+    public void showTablePartitons(DataOutputStream out,
+                                   List<String> parts)
+        throws HiveException;
 }
 

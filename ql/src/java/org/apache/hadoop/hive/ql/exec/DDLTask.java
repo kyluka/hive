@@ -1823,18 +1823,14 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     }
 
     // write the results in the file
-    DataOutput outStream = null;
+    DataOutputStream outStream = null;
     try {
       Path resFile = new Path(showParts.getResFile());
       FileSystem fs = resFile.getFileSystem(conf);
       outStream = fs.create(resFile);
-      Iterator<String> iterParts = parts.iterator();
 
-      while (iterParts.hasNext()) {
-        // create a row per partition name
-        outStream.writeBytes(iterParts.next());
-        outStream.write(terminator);
-      }
+      formatter.showTablePartitons(outStream, parts);
+
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {

@@ -353,4 +353,20 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
       outStream.writeBytes(unknown ? unknownString : "" + lastUpdateTime);
       outStream.write(terminator);
   }
+
+    /**
+     * Show the table partitions.
+     */
+    public void showTablePartitons(DataOutputStream outStream, List<String> parts)
+        throws HiveException
+    {
+        try {
+            for (String part : parts) {
+                outStream.writeBytes(part);
+                outStream.write(terminator);
+            }
+        } catch (IOException e) {
+            throw new HiveException(e);
+        }
+    }
 }
