@@ -20,6 +20,9 @@ package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -304,28 +307,49 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .build());
     }
 
-    private List makeTablePartions(List<String> parts) {
-        ArrayList res = new ArrayList();
-        for (String part : parts)
-            res.add(makeOneTablePartition(part));
-        return res;
+    private List makeTablePartions(List<String> parts)
+        throws HiveException
+    {
+        try {
+            ArrayList res = new ArrayList();
+            for (String part : parts)
+                res.add(makeOneTablePartition(part));
+            return res;
+        } catch (UnsupportedEncodingException e) {
+            throw new HiveException(e);
+        }
     }
 
     // This seems like a very wrong implementation.
-    private Map makeOneTablePartition(String part) {
-        String name = part;
-        String val = null;
+    private Map makeOneTablePartition(String partIdent)
+        throws UnsupportedEncodingException
+    {
+        ArrayList<Map> res = new ArrayList<Map>();
 
-        String[] kv = StringUtils.split(part, "=", 2);
-        if (kv != null) {
-            name = kv[0];
-            if (kv.length > 1)
-                val = kv[1];
+        ArrayList<String> names = new ArrayList<String>();
+        for (String part : StringUtils.split(partIdent, "/")) {
+            String name = part;
+            String val = null;
+            String[] kv = StringUtils.split(part, "=", 2);
+            if (kv != null) {
+                name = kv[0];
+                if (kv.length > 1)
+                    val = URLDecoder.decode(kv[1], "UTF-8");
+            }
+            if (val != null)
+                names.add(name + "='" + val + "'");
+            else
+                names.add(name);
+
+            res.add(MapBuilder.create()
+                    .put("columnName", name)
+                    .put("columnValue", val)
+                    .build());
         }
 
         return MapBuilder.create()
-            .put("columnName", name)
-            .put("columnValue", val)
+            .put("name", StringUtils.join(names, ","))
+            .put("values", res)
             .build();
     }
 }
