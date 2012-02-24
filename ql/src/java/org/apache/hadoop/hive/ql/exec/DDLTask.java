@@ -186,6 +186,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     super.initialize(conf, queryPlan, ctx);
     this.conf = conf;
 
+    // Pick the formatter to use to display the results.  Either the
+    // normal human readable output or a json object.
     if ("json".equals(conf.get("hive.format")))
       formatter = new JsonMetaDataFormatter();
     else
