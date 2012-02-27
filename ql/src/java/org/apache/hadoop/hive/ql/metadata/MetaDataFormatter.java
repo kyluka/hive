@@ -65,5 +65,15 @@ public interface MetaDataFormatter {
     public void showTablePartitons(DataOutputStream out,
                                    List<String> parts)
         throws HiveException;
+
+    /**
+     * Describe a database.
+     */
+    public void showDatabaseDescription(DataOutputStream out,
+                                        String database, 
+                                        String comment, 
+                                        String location,
+                                        Map<String, String> params)
+        throws HiveException;
 }
 
