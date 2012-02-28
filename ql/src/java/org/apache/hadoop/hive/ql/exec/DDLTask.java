@@ -1985,19 +1985,14 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     }
 
     // write the results in the file
-    DataOutput outStream = null;
+    DataOutputStream outStream = null;
     try {
       Path resFile = new Path(showTbls.getResFile());
       FileSystem fs = resFile.getFileSystem(conf);
       outStream = fs.create(resFile);
-      SortedSet<String> sortedTbls = new TreeSet<String>(tbls);
-      Iterator<String> iterTbls = sortedTbls.iterator();
 
-      while (iterTbls.hasNext()) {
-        // create a row per table name
-        outStream.writeBytes(iterTbls.next());
-        outStream.write(terminator);
-      }
+      SortedSet<String> sortedTbls = new TreeSet<String>(tbls);
+      formatter.showTables(outStream, sortedTbls);
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -54,6 +55,25 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             out.write(msg.getBytes("UTF-8"));
         } catch (Exception e) {
             throw new HiveException(e);
+        }
+    }
+
+    /**
+     * Show a list table.
+     */
+    public void showTables(DataOutputStream out, Set<String> tables)
+        throws HiveException
+    {
+        Iterator<String> iterTbls = tables.iterator();
+
+        try {
+            while (iterTbls.hasNext()) {
+                // create a row per table name
+                out.writeBytes(iterTbls.next());
+                out.write(terminator);
+            }
+        } catch (IOException e) {
+           throw new HiveException(e);
         }
     }
 

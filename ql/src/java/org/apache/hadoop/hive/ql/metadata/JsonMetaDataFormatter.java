@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,6 +70,18 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         asJson(out,
                MapBuilder.create()
                .put("error", msg)
+               .build());
+    }
+
+    /**
+     * Show a list table.
+     */
+    public void showTables(DataOutputStream out, Set<String> tables)
+        throws HiveException
+    {
+        asJson(out,
+               MapBuilder.create()
+               .put("tables", tables)
                .build());
     }
 

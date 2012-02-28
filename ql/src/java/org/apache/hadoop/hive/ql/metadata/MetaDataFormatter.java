@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -40,6 +41,12 @@ public interface MetaDataFormatter {
         throws HiveException;
 
     /**
+     * Show a list table.
+     */
+    public void showTables(DataOutputStream out, Set<String> tables)
+        throws HiveException;
+ 
+    /**
      * Describe table.
      */
     public void describeTable(DataOutputStream out,
@@ -47,8 +54,8 @@ public interface MetaDataFormatter {
                               Table tbl, Partition part, List<FieldSchema> cols,
                               boolean isFormatted, boolean isExt)
         throws HiveException;
-
-    /**
+ 
+   /**
      * Show the table status.
      */
     public void showTableStatus(DataOutputStream out,
