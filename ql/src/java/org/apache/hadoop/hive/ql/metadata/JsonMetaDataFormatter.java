@@ -352,4 +352,30 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
             .put("values", res)
             .build();
     }
+
+    public void showDatabaseDescription(DataOutputStream out,
+                                String database,
+                                String comment,
+                                String location,
+                                Map<String, String> params)
+        throws HiveException
+    {
+        if (params == null || params.isEmpty()) {
+            asJson(out, MapBuilder
+               .create()
+               .put("database", database)
+               .put("comment", comment)
+               .put("location", location)
+               .build());
+        } else {
+            asJson(out, MapBuilder
+               .create()
+               .put("database", database)
+               .put("comment", comment)
+               .put("location", location)
+               .put("params", params)
+               .build());
+        }
+    }
+
 }

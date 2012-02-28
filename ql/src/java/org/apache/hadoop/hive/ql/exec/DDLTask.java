@@ -2328,7 +2328,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
   }
 
   private int descDatabase(DescDatabaseDesc descDatabase) throws HiveException {
-    DataOutput outStream = null;
+    DataOutputStream outStream = null;
     try {
       Path resFile = new Path(descDatabase.getResFile());
       FileSystem fs = resFile.getFileSystem(conf);
@@ -2336,32 +2336,17 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
       Database database = db.getDatabase(descDatabase.getDatabaseName());
 
-      if (database != null) {
-        outStream.writeBytes(database.getName());
-        outStream.write(separator);
-        if (database.getDescription() != null) {
-          outStream.writeBytes(database.getDescription());
-        }
-        outStream.write(separator);
-        if (database.getLocationUri() != null) {
-          outStream.writeBytes(database.getLocationUri());
-        }
-
-        outStream.write(separator);
-        if (descDatabase.isExt() && database.getParametersSize() > 0) {
+      if (database != null) {          
           Map<String, String> params = database.getParameters();
-          outStream.writeBytes(params.toString());
-        }
 
-      } else {
-        outStream.writeBytes("No such database: " + descDatabase.getDatabaseName());
+          formatter.showDatabaseDescription(outStream,
+                  database.getName(), 
+                  database.getDescription(),
+                  database.getLocationUri(),
+                  params);
       }
-
-      outStream.write(terminator);
-
       ((FSDataOutputStream) outStream).close();
       outStream = null;
-
     } catch (FileNotFoundException e) {
       LOG.warn("describe database: " + stringifyException(e));
       return 1;
