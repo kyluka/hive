@@ -373,7 +373,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .put("database", database)
                .put("comment", comment)
                .put("location", location)
-               .put("params", params.toString())
+               .put("params", params)
                .build());
         }
     }
