@@ -369,4 +369,30 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             throw new HiveException(e);
         }
     }
+
+    /**
+     * Describe a database
+     */
+    public void showDatabaseDescription(DataOutputStream outStream,
+                                        String database,
+                                        String comment,
+                                        String location,
+                                        Map<String, String> params)
+        throws HiveException
+    {
+        try {
+            outStream.writeBytes(database);
+            outStream.write(separator);
+            outStream.writeBytes(comment);
+            outStream.write(separator);
+            outStream.writeBytes(location);
+            outStream.write(separator);
+            if (params != null && !params.isEmpty()) {
+                outStream.writeBytes(params.toString());
+            }
+            outStream.write(terminator);
+        } catch (IOException e) {
+            throw new HiveException(e);
+        }
+    }
 }
