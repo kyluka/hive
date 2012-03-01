@@ -1935,7 +1935,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       FileSystem fs = resFile.getFileSystem(conf);
       outStream = fs.create(resFile);
 
-      formatter.showDatabase(outStream, databases);
+      formatter.showDatabases(outStream, databases);
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {

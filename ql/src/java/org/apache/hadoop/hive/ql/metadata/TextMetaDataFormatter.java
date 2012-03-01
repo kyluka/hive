@@ -393,7 +393,7 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
     /**
      * Show the list of databases
      */
-    public void showDatabase(DataOutputStream outStream, List<String> databases) 
+    public void showDatabases(DataOutputStream outStream, List<String> databases) 
         throws HiveException 
         {
         try {

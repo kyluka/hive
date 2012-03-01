@@ -367,7 +367,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     /**
      * Show a list of databases
      */
-    public void showDatabase(DataOutputStream out, List<String> databases)
+    public void showDatabases(DataOutputStream out, List<String> databases)
         throws HiveException
     {
         asJson(out,

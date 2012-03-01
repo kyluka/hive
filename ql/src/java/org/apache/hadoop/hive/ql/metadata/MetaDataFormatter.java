@@ -76,7 +76,7 @@ public interface MetaDataFormatter {
     /**
      * Show the databases
      */
-    public void showDatabase(DataOutputStream out, List<String> databases)
+    public void showDatabases(DataOutputStream out, List<String> databases)
         throws HiveException;
     
     /**
