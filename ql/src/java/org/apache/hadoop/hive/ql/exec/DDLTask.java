@@ -1929,17 +1929,13 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     LOG.info("results : " + databases.size());
 
     // write the results in the file
-    DataOutput outStream = null;
+    DataOutputStream outStream = null;
     try {
       Path resFile = new Path(showDatabasesDesc.getResFile());
       FileSystem fs = resFile.getFileSystem(conf);
       outStream = fs.create(resFile);
 
-      for (String database : databases) {
-        // create a row per database name
-        outStream.writeBytes(database);
-        outStream.write(terminator);
-      }
+      formatter.showDatabases(outStream, databases);
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {

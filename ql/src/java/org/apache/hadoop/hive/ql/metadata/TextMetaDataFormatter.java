@@ -389,7 +389,24 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             throw new HiveException(e);
         }
     }
-
+    
+    /**
+     * Show the list of databases
+     */
+    public void showDatabases(DataOutputStream outStream, List<String> databases) 
+        throws HiveException 
+        {
+        try {
+            for (String database : databases) {
+                // create a row per database name
+                outStream.writeBytes(database);
+                outStream.write(terminator);
+              }
+        } catch (IOException e) {
+            throw new HiveException(e);
+        }
+    }
+    
     /**
      * Describe a database
      */
