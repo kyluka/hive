@@ -22,9 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -365,7 +363,22 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
             .put("values", res)
             .build();
     }
+    
+    /**
+     * Show a list of databases
+     */
+    public void showDatabases(DataOutputStream out, List<String> databases)
+        throws HiveException
+    {
+        asJson(out,
+               MapBuilder.create()
+               .put("databases", databases)
+               .build());
+    }
 
+    /**
+     * Show the description of a database
+     */
     public void showDatabaseDescription(DataOutputStream out,
                                 String database,
                                 String comment,
