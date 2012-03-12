@@ -1,0 +1,10 @@
+PREHOOK: query: DESCRIBE srcpart
+PREHOOK: type: DESCTABLE
+POSTHOOK: query: DESCRIBE srcpart
+POSTHOOK: type: DESCTABLE
+{"columns":[{"name":"key","comment":"default","type":"string"},{"name":"value","comment":"default","type":"string"},{"name":"ds","type":"string"},{"name":"hr","type":"string"}]}	 	 
+PREHOOK: query: DESCRIBE extended srcpart
+PREHOOK: type: DESCTABLE
+POSTHOOK: query: DESCRIBE extended srcpart
+POSTHOOK: type: DESCTABLE
+#### A masked pattern was here ####
