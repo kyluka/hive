@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,6 +37,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
 
 /**
@@ -48,7 +50,10 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
     private static final int separator = Utilities.tabCode;
     private static final int terminator = Utilities.newLineCode;
 
-    public void error(DataOutputStream out, String msg)
+    /**
+     * Write an error message.
+     */
+    public void error(OutputStream out, String msg)
         throws HiveException
     {
         try {
@@ -59,7 +64,50 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
     }
 
     /**
-     * Show a list table.
+     * Write an error message.
+     */
+    public void error(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        error(out, msg);
+    }
+
+    /**
+     * Write a log warn message.
+     */
+    public void logWarn(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        LOG.warn(msg);
+    }
+
+    /**
+     * Write a log info message.
+     */
+    public void logInfo(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        LOG.info(msg);
+    }
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, int errorCode) {
+        console.printError(msg);
+    }
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, String detail,
+                             int errorCode)
+    {
+        console.printError(msg, detail);
+    }
+
+    /**
+     * Show a list of tables.
      */
     public void showTables(DataOutputStream out, Set<String> tables)
         throws HiveException
@@ -430,6 +478,23 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             outStream.write(terminator);
         } catch (IOException e) {
             throw new HiveException(e);
+        }
+    }
+
+    /**
+     * Show databases.
+     */
+    public void showDatabases(DataOutputStream out, List<String> databases)
+        throws HiveException
+    {
+        try {
+            for (String database : databases) {
+                // create a row per database name
+                out.writeBytes(database);
+                out.write(terminator);
+            }
+        } catch (IOException e) {
+           throw new HiveException(e);
         }
     }
 }

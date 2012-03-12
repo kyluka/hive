@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 
 /**
  * Interface to format table and index information.  We can format it
@@ -35,17 +37,62 @@ import org.apache.hadoop.hive.ql.metadata.Table;
  */
 public interface MetaDataFormatter {
     /**
-     * Write error message.
+     * Generic error code.  This and the other error codes are
+     * designed to match the HTTP status codes.
      */
-    public void error(DataOutputStream out, String msg)
+    static final int ERROR = 500;
+
+    /**
+     * Missing error code.
+     */
+    static final int MISSING = 404;
+
+    /**
+     * Conflict error code.
+     */
+    static final int CONFLICT = 409;
+
+    /**
+     * Write an error message.
+     */
+    public void error(OutputStream out, String msg)
         throws HiveException;
 
     /**
-     * Show a list table.
+     * Write an error message.
+     */
+    public void error(OutputStream out, String msg, int errorCode)
+        throws HiveException;
+
+    /**
+     * Write a log warn message.
+     */
+    public void logWarn(OutputStream out, String msg, int errorCode)
+        throws HiveException;
+
+    /**
+     * Write a log info message.
+     */
+    public void logInfo(OutputStream out, String msg, int errorCode)
+        throws HiveException;
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, int errorCode);
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, String detail,
+                             int errorCode);
+
+    /**
+     * Show a list of tables.
      */
     public void showTables(DataOutputStream out, Set<String> tables)
         throws HiveException;
- 
+
     /**
      * Describe table.
      */
@@ -54,7 +101,7 @@ public interface MetaDataFormatter {
                               Table tbl, Partition part, List<FieldSchema> cols,
                               boolean isFormatted, boolean isExt)
         throws HiveException;
- 
+
    /**
      * Show the table status.
      */
@@ -83,10 +130,16 @@ public interface MetaDataFormatter {
      * Describe a database.
      */
     public void showDatabaseDescription(DataOutputStream out,
-                                        String database, 
-                                        String comment, 
+                                        String database,
+                                        String comment,
                                         String location,
                                         Map<String, String> params)
+        throws HiveException;
+
+    /**
+     * Show databases.
+     */
+    public void showDatabases(DataOutputStream out, List<String> databases)
         throws HiveException;
 }
 

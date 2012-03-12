@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.metadata;
 
 import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -36,6 +37,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -49,7 +51,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     /**
      * Convert the map to a JSON string.
      */
-    public void asJson(DataOutputStream out, Map data)
+    public void asJson(OutputStream out, Map data)
         throws HiveException
     {
         try {
@@ -60,9 +62,9 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     }
 
     /**
-     * Write error message.
+     * Write an error message.
      */
-    public void error(DataOutputStream out, String msg)
+    public void error(OutputStream out, String msg) // TODO: ctdean
         throws HiveException
     {
         asJson(out,
@@ -72,7 +74,71 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     }
 
     /**
-     * Show a list table.
+     * Write an error message.
+     */
+    public void error(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        asJson(out,
+               MapBuilder.create()
+               .put("error", msg)
+               .put("errorCode", errorCode)
+               .build());
+    }
+
+    /**
+     * Write a log warn message.
+     */
+    public void logWarn(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        LOG.warn(msg);
+        error(out, msg, errorCode);
+    }
+
+    /**
+     * Write a log info message.
+     */
+    public void logInfo(OutputStream out, String msg, int errorCode)
+        throws HiveException
+    {
+        LOG.info(msg);
+        error(out, msg, errorCode);
+    }
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, int errorCode) {
+        try {
+            console.printError(msg);
+            error(console.getOutStream(), msg, errorCode);
+        } catch (HiveException e) {
+            console.printError("unable to create json: " + e);
+        }
+    }
+
+    /**
+     * Write a console error message.
+     */
+    public void consoleError(LogHelper console, String msg, String detail,
+                             int errorCode)
+    {
+        try {
+            console.printError(msg, detail);
+            asJson(console.getOutStream(),
+                   MapBuilder.create()
+                   .put("error", msg)
+                   .put("errorDetail", detail)
+                   .put("errorCode", errorCode)
+                   .build());
+        } catch (HiveException e) {
+            console.printError("unable to create json: " + e);
+        }
+    }
+
+    /**
+     * Show a list of tables.
      */
     public void showTables(DataOutputStream out, Set<String> tables)
         throws HiveException
@@ -184,8 +250,8 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         builder.put("tableName", tbl.getTableName());
         builder.put("owner", tbl.getOwner());
         builder.put("location", tblLoc);
-        builder.put("inputformat", inputFormattCls);
-        builder.put("outputformat", outputFormattCls);
+        builder.put("inputFormat", inputFormattCls);
+        builder.put("outputFormat", outputFormattCls);
         builder.put("columns", makeColsUnformatted(tbl.getCols()));
 
         builder.put("partitioned", tbl.isPartitioned());
@@ -380,10 +446,10 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
      * Show the description of a database
      */
     public void showDatabaseDescription(DataOutputStream out,
-                                String database,
-                                String comment,
-                                String location,
-                                Map<String, String> params)
+                                        String database,
+                                        String comment,
+                                        String location,
+                                        Map<String, String> params)
         throws HiveException
     {
         if (params == null || params.isEmpty()) {
@@ -404,4 +470,15 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         }
     }
 
+    /**
+     * Show databases.
+     */
+    public void showDatabases(DataOutputStream out, List<String> databases)
+        throws HiveException
+    {
+        asJson(out,
+               MapBuilder.create()
+               .put("databases", databases)
+               .build());
+    }
 }

@@ -388,17 +388,31 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       }
 
     } catch (InvalidTableException e) {
-      console.printError("Table " + e.getTableName() + " does not exist");
+      formatter.consoleError(console, "Table " + e.getTableName() + " does not exist",
+                             formatter.MISSING);
       LOG.debug(stringifyException(e));
       return 1;
+    } catch (AlreadyExistsException e) {
+      formatter.consoleError(console, e.getMessage(),
+                             "\n" + stringifyException(e),
+                             formatter.CONFLICT);
+      return 1;
+    } catch (NoSuchObjectException e) {
+      formatter.consoleError(console, e.getMessage(),
+                             "\n" + stringifyException(e),
+                             formatter.MISSING);
+      return 1;
     } catch (HiveException e) {
-      console.printError("FAILED: Error in metadata: " + e.getMessage(), "\n"
-          + stringifyException(e));
+      formatter.consoleError(console,
+                             "FAILED: Error in metadata: " + e.getMessage(),
+                             "\n" + stringifyException(e),
+                             formatter.ERROR);
       LOG.debug(stringifyException(e));
       return 1;
     } catch (Exception e) {
-      console.printError("Failed with exception " + e.getMessage(), "\n"
-          + stringifyException(e));
+      formatter.consoleError(console, "Failed with exception " + e.getMessage(),
+                             "\n" + stringifyException(e),
+                             formatter.ERROR);
       return (1);
     }
     assert false;
@@ -1814,7 +1828,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     tbl = db.getTable(tabName);
 
     if (!tbl.isPartitioned()) {
-      console.printError("Table " + tabName + " is not a partitioned table");
+      formatter.consoleError(console,
+                             "Table " + tabName + " is not a partitioned table",
+                             formatter.ERROR);
       return 1;
     }
     if (showParts.getPartSpec() != null) {
@@ -1939,10 +1955,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {
-      LOG.warn("show databases: " + stringifyException(e));
+      formatter.logWarn(outStream, "show databases: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.warn("show databases: " + stringifyException(e));
+      formatter.logWarn(outStream, "show databases: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (Exception e) {
       throw new HiveException(e.toString());
@@ -1992,10 +2010,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {
-      LOG.warn("show table: " + stringifyException(e));
+      formatter.logWarn(outStream, "show table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.warn("show table: " + stringifyException(e));
+      formatter.logWarn(outStream, "show table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (Exception e) {
       throw new HiveException(e.toString());
@@ -2327,11 +2347,11 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
       Database database = db.getDatabase(descDatabase.getDatabaseName());
 
-      if (database != null) {          
+      if (database != null) {
           Map<String, String> params = database.getParameters();
 
           formatter.showDatabaseDescription(outStream,
-                  database.getName(), 
+                  database.getName(),
                   database.getDescription(),
                   database.getLocationUri(),
                   params);
@@ -2339,10 +2359,14 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {
-      LOG.warn("describe database: " + stringifyException(e));
+      formatter.logWarn(outStream,
+                        "describe database: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.warn("describe database: " + stringifyException(e));
+      formatter.logWarn(outStream,
+                        "describe database: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (Exception e) {
       throw new HiveException(e.toString());
@@ -2401,10 +2425,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {
-      LOG.info("show table status: " + stringifyException(e));
+      formatter.logInfo(outStream, "show table status: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.info("show table status: " + stringifyException(e));
+      formatter.logInfo(outStream, "show table status: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (Exception e) {
       throw new HiveException(e);
@@ -2440,7 +2466,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
         FileSystem fs = resFile.getFileSystem(conf);
         outStream = fs.create(resFile);
         String errMsg = "Table " + tableName + " does not exist";
-        formatter.error(outStream, errMsg);
+        formatter.error(outStream, errMsg, formatter.MISSING);
         ((FSDataOutputStream) outStream).close();
         outStream = null;
         return 0;
@@ -2460,10 +2486,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
         tbl = part.getTable();
       }
     } catch (FileNotFoundException e) {
-      LOG.info("describe table: " + stringifyException(e));
+      formatter.logInfo(outStream, "describe table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.info("describe table: " + stringifyException(e));
+      formatter.logInfo(outStream, "describe table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } finally {
       IOUtils.closeStream((FSDataOutputStream) outStream);
@@ -2496,10 +2524,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       outStream = null;
 
     } catch (FileNotFoundException e) {
-      LOG.info("describe table: " + stringifyException(e));
+      formatter.logInfo(outStream, "describe table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (IOException e) {
-      LOG.info("describe table: " + stringifyException(e));
+      formatter.logInfo(outStream, "describe table: " + stringifyException(e),
+                        formatter.ERROR);
       return 1;
     } catch (Exception e) {
       throw new HiveException(e);
@@ -2570,8 +2600,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     if(alterTbl.getPartSpec() != null) {
       part = db.getPartition(tbl, alterTbl.getPartSpec(), false);
       if(part == null) {
-        console.printError("Partition : " + alterTbl.getPartSpec().toString()
-            + " does not exist.");
+        formatter.consoleError(console,
+                               "Partition : " + alterTbl.getPartSpec().toString()
+                               + " does not exist.",
+                               formatter.MISSING);
         return 1;
       }
     }
@@ -2601,7 +2633,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           while (iterOldCols.hasNext()) {
             String oldColName = iterOldCols.next().getName();
             if (oldColName.equalsIgnoreCase(newColName)) {
-              console.printError("Column '" + newColName + "' exists");
+              formatter.consoleError(console,
+                                     "Column '" + newColName + "' exists",
+                                     formatter.CONFLICT);
               return 1;
             }
           }
@@ -2633,7 +2667,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
         String oldColName = col.getName();
         if (oldColName.equalsIgnoreCase(newName)
             && !oldColName.equalsIgnoreCase(oldName)) {
-          console.printError("Column '" + newName + "' exists");
+          formatter.consoleError(console,
+                                 "Column '" + newName + "' exists",
+                                 formatter.CONFLICT);
           return 1;
         } else if (oldColName.equalsIgnoreCase(oldName)) {
           col.setName(newName);
@@ -2661,12 +2697,16 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
       // did not find the column
       if (!found) {
-        console.printError("Column '" + oldName + "' does not exist");
+        formatter.consoleError(console,
+                               "Column '" + oldName + "' does not exists",
+                               formatter.MISSING);
         return 1;
       }
       // after column is not null, but we did not find it.
       if ((afterCol != null && !afterCol.trim().equals("")) && position < 0) {
-        console.printError("Column '" + afterCol + "' does not exist");
+        formatter.consoleError(console,
+                               "Column '" + afterCol + "' does not exists",
+                               formatter.MISSING);
         return 1;
       }
 
@@ -2687,8 +2727,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           && !tbl.getSerializationLib().equals(LazySimpleSerDe.class.getName())
           && !tbl.getSerializationLib().equals(ColumnarSerDe.class.getName())
           && !tbl.getSerializationLib().equals(DynamicSerDe.class.getName())) {
-        console.printError("Replace columns is not supported for this table. "
-            + "SerDe may be incompatible.");
+        formatter.consoleError(console,
+                               "Replace columns is not supported for this table. "
+                               + "SerDe may be incompatible.",
+                               formatter.ERROR);
         return 1;
       }
       tbl.getTTable().getSd().setCols(alterTbl.getNewCols());
@@ -2819,7 +2861,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
         throw new HiveException(e);
       }
     } else {
-      console.printError("Unsupported Alter commnad");
+      formatter.consoleError(console,
+                             "Unsupported Alter commnad",
+                             formatter.ERROR);
       return 1;
     }
 
@@ -2830,8 +2874,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       try {
         tbl.checkValidity();
       } catch (HiveException e) {
-        console.printError("Invalid table columns : " + e.getMessage(),
-            stringifyException(e));
+        formatter.consoleError(console,
+                               "Invalid table columns : " + e.getMessage(),
+                               formatter.ERROR);
         return 1;
       }
     } else {
@@ -2997,8 +3042,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     try {
       user = conf.getUser();
     } catch (IOException e) {
-      console.printError("Unable to get current user: " + e.getMessage(),
-          stringifyException(e));
+      formatter.consoleError(console,
+                             "Unable to get current user: " + e.getMessage(),
+                             stringifyException(e),
+                             formatter.ERROR);
       return false;
     }
 
@@ -3420,8 +3467,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     try {
       tbl.setOwner(conf.getUser());
     } catch (IOException e) {
-      console.printError("Unable to get current user: " + e.getMessage(),
-          stringifyException(e));
+      formatter.consoleError(console,
+                             "Unable to get current user: " + e.getMessage(),
+                             stringifyException(e),
+                             formatter.ERROR);
       return 1;
     }
     // set create time
