@@ -1,19 +1,23 @@
 set hive.format=json;
 
-CREATE DATABASE IF NOT EXISTS db1 COMMENT 'Test database' LOCATION '${hiveconf:hive.metastore.warehouse.dir}/db1' WITH DBPROPERTIES ('id' = 'db1'); 
+CREATE DATABASE IF NOT EXISTS jsondb1 COMMENT 'Test database' LOCATION '${hiveconf:hive.metastore.warehouse.dir}/jsondb1' WITH DBPROPERTIES ('id' = 'jsondb1'); 
 
-DESCRIBE DATABASE db1;
+DESCRIBE DATABASE jsondb1;
 
-DESCRIBE DATABASE EXTENDED db1;
+DESCRIBE DATABASE EXTENDED jsondb1;
 
-DROP DATABASE db1;
+SHOW DATABASES;
 
-CREATE DATABASE db1;
+SHOW DATABASES LIKE 'json*';
 
-DESCRIBE DATABASE db1;
+DROP DATABASE jsondb1;
 
-DESCRIBE DATABASE EXTENDED db1;
+CREATE DATABASE jsondb1;
 
-DROP DATABASE db1;
+DESCRIBE DATABASE jsondb1;
+
+DESCRIBE DATABASE EXTENDED jsondb1;
+
+DROP DATABASE jsondb1;
 
 set hive.format=text;

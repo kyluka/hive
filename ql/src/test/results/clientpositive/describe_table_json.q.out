@@ -1,10 +1,33 @@
-PREHOOK: query: DESCRIBE srcpart
+PREHOOK: query: CREATE TABLE IF NOT EXISTS jsontable (key INT, value STRING) COMMENT 'json table' STORED AS TEXTFILE
+PREHOOK: type: CREATETABLE
+POSTHOOK: query: CREATE TABLE IF NOT EXISTS jsontable (key INT, value STRING) COMMENT 'json table' STORED AS TEXTFILE
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: default@jsontable
+PREHOOK: query: SHOW TABLES
+PREHOOK: type: SHOWTABLES
+POSTHOOK: query: SHOW TABLES
+POSTHOOK: type: SHOWTABLES
+{"tables":["jsontable","src","src1","src_json","src_sequencefile","src_thrift","srcbucket","srcbucket2","srcpart"]}
+PREHOOK: query: SHOW TABLES LIKE 'json*'
+PREHOOK: type: SHOWTABLES
+POSTHOOK: query: SHOW TABLES LIKE 'json*'
+POSTHOOK: type: SHOWTABLES
+{"tables":["jsontable"]}
+PREHOOK: query: DESCRIBE jsontable
 PREHOOK: type: DESCTABLE
-POSTHOOK: query: DESCRIBE srcpart
+POSTHOOK: query: DESCRIBE jsontable
 POSTHOOK: type: DESCTABLE
-{"columns":[{"name":"key","comment":"default","type":"string"},{"name":"value","comment":"default","type":"string"},{"name":"ds","type":"string"},{"name":"hr","type":"string"}]}	 	 
-PREHOOK: query: DESCRIBE extended srcpart
+{"columns":[{"name":"key","type":"int"},{"name":"value","type":"string"}]}	 	 
+PREHOOK: query: DESCRIBE extended jsontable
 PREHOOK: type: DESCTABLE
-POSTHOOK: query: DESCRIBE extended srcpart
+POSTHOOK: query: DESCRIBE extended jsontable
 POSTHOOK: type: DESCTABLE
 #### A masked pattern was here ####
+PREHOOK: query: DROP TABLE jsontable
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@jsontable
+PREHOOK: Output: default@jsontable
+POSTHOOK: query: DROP TABLE jsontable
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@jsontable
+POSTHOOK: Output: default@jsontable
