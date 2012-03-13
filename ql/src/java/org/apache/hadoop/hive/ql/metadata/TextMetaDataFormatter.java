@@ -145,20 +145,10 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
                                   boolean isFormatted, boolean isExt)
         throws HiveException, IOException
     {
-      if (colPath.equals(tableName)) {
-        if (!isFormatted) {
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
-        } else {
-          outStream.writeBytes(
-            MetaDataFormatUtils.getAllColumnsInformation(cols,
-              tbl.isPartitioned() ? tbl.getPartCols() : null));
-        }
+      if (isFormatted) {
+        outStream.writeBytes(MetaDataFormatUtils.getAllColumnsInformation(cols));
       } else {
-        if (isFormatted) {
-          outStream.writeBytes(MetaDataFormatUtils.getAllColumnsInformation(cols));
-        } else {
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
-        }
+        outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
       }
 
       if (tableName.equals(colPath)) {

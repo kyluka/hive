@@ -60,5 +60,7 @@
     <dependency org="commons-logging" name="commons-logging-api" rev="${commons-logging-api.version}"
                 transitive="false"/>
     <dependency org="org.apache.derby" name="derby" rev="${derby.version}"/>
+    <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="${jackson.version}" transitive="false"/>
+    <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="${jackson.version}" transitive="false"/>
   </dependencies>
 </ivy-module>
