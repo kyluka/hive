@@ -125,7 +125,7 @@ public interface MetaDataFormatter {
      */
     public void showDatabases(DataOutputStream out, List<String> databases)
         throws HiveException;
-    
+
     /**
      * Describe a database.
      */
@@ -134,12 +134,6 @@ public interface MetaDataFormatter {
                                         String comment,
                                         String location,
                                         Map<String, String> params)
-        throws HiveException;
-
-    /**
-     * Show databases.
-     */
-    public void showDatabases(DataOutputStream out, List<String> databases)
         throws HiveException;
 }
 

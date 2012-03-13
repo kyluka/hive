@@ -429,7 +429,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
             .put("values", res)
             .build();
     }
-    
+
     /**
      * Show a list of databases
      */
@@ -468,17 +468,5 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .put("params", params)
                .build());
         }
-    }
-
-    /**
-     * Show databases.
-     */
-    public void showDatabases(DataOutputStream out, List<String> databases)
-        throws HiveException
-    {
-        asJson(out,
-               MapBuilder.create()
-               .put("databases", databases)
-               .build());
     }
 }
