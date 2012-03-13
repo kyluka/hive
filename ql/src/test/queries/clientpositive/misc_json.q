@@ -6,7 +6,7 @@ ALTER TABLE jsontable ADD COLUMNS (name STRING COMMENT 'a new column');
 
 ALTER TABLE jsontable RENAME TO jsontable2;
 
-SHOW TABLE EXTENDED LIKE jsontable;
+SHOW TABLE EXTENDED LIKE jsontable2;
 
 DROP TABLE jsontable2;
 

@@ -20,11 +20,11 @@ POSTHOOK: type: ALTERTABLE_RENAME
 POSTHOOK: Input: default@jsontable
 POSTHOOK: Output: default@jsontable
 POSTHOOK: Output: default@jsontable2
-PREHOOK: query: SHOW TABLE EXTENDED LIKE jsontable
+PREHOOK: query: SHOW TABLE EXTENDED LIKE jsontable2
 PREHOOK: type: SHOW_TABLESTATUS
-POSTHOOK: query: SHOW TABLE EXTENDED LIKE jsontable
+POSTHOOK: query: SHOW TABLE EXTENDED LIKE jsontable2
 POSTHOOK: type: SHOW_TABLESTATUS
-{"tables":[]}
+#### A masked pattern was here ####
 PREHOOK: query: DROP TABLE jsontable2
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@jsontable2

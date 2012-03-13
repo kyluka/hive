@@ -8,6 +8,8 @@ SHOW TABLES LIKE 'json*';
 
 SHOW TABLE EXTENDED LIKE 'json*';
 
+ALTER TABLE jsontable SET TBLPROPERTIES ('id' = 'jsontable');
+
 DESCRIBE jsontable;
 
 DESCRIBE extended jsontable;
