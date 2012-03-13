@@ -6,6 +6,8 @@ SHOW TABLES;
 
 SHOW TABLES LIKE 'json*';
 
+SHOW TABLE EXTENDED LIKE 'json*';
+
 DESCRIBE jsontable;
 
 DESCRIBE extended jsontable;
