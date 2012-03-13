@@ -164,9 +164,9 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
 
         if (isExt) {
             if (part != null)
-                builder.put("partition", part.getTPartition());
+                builder.put("partitionInfo", part.getTPartition());
             else
-                builder.put("table", tbl.getTTable());
+                builder.put("tableInfo", tbl.getTTable());
         }
 
         asJson(out, builder.build());
@@ -429,7 +429,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
             .put("values", res)
             .build();
     }
-    
+
     /**
      * Show a list of databases
      */
@@ -468,17 +468,5 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .put("params", params)
                .build());
         }
-    }
-
-    /**
-     * Show databases.
-     */
-    public void showDatabases(DataOutputStream out, List<String> databases)
-        throws HiveException
-    {
-        asJson(out,
-               MapBuilder.create()
-               .put("databases", databases)
-               .build());
     }
 }

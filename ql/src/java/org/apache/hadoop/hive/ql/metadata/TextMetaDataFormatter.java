@@ -437,12 +437,12 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             throw new HiveException(e);
         }
     }
-    
+
     /**
      * Show the list of databases
      */
-    public void showDatabases(DataOutputStream outStream, List<String> databases) 
-        throws HiveException 
+    public void showDatabases(DataOutputStream outStream, List<String> databases)
+        throws HiveException
         {
         try {
             for (String database : databases) {
@@ -454,7 +454,7 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             throw new HiveException(e);
         }
     }
-    
+
     /**
      * Describe a database
      */
@@ -478,23 +478,6 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
             outStream.write(terminator);
         } catch (IOException e) {
             throw new HiveException(e);
-        }
-    }
-
-    /**
-     * Show databases.
-     */
-    public void showDatabases(DataOutputStream out, List<String> databases)
-        throws HiveException
-    {
-        try {
-            for (String database : databases) {
-                // create a row per database name
-                out.writeBytes(database);
-                out.write(terminator);
-            }
-        } catch (IOException e) {
-           throw new HiveException(e);
         }
     }
 }
