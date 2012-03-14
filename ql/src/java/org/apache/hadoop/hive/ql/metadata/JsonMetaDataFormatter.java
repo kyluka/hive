@@ -64,18 +64,6 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     /**
      * Write an error message.
      */
-    public void error(OutputStream out, String msg) // TODO: ctdean
-        throws HiveException
-    {
-        asJson(out,
-               MapBuilder.create()
-               .put("error", msg)
-               .build());
-    }
-
-    /**
-     * Write an error message.
-     */
     public void error(OutputStream out, String msg, int errorCode)
         throws HiveException
     {

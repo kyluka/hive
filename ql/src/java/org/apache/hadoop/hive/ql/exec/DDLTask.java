@@ -2336,14 +2336,20 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
       Database database = db.getDatabase(descDatabase.getDatabaseName());
 
-      if (database != null) {
-          Map<String, String> params = database.getParameters();
+      if (database == null) {
+          formatter.error(outStream,
+                          "No such database: " + descDatabase.getDatabaseName(),
+                          formatter.MISSING);
+      } else {
+          Map<String, String> params = null;
+          if(descDatabase.isExt())
+              params = database.getParameters();
 
           formatter.showDatabaseDescription(outStream,
-                  database.getName(),
-                  database.getDescription(),
-                  database.getLocationUri(),
-                  params);
+                                            database.getName(),
+                                            database.getDescription(),
+                                            database.getLocationUri(),
+                                            params);
       }
       ((FSDataOutputStream) outStream).close();
       outStream = null;
@@ -2467,7 +2473,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           outStream = fs.create(resFile);
           String errMsg = "Partition " + descTbl.getPartSpec() + " for table "
               + tableName + " does not exist";
-          formatter.error(outStream, errMsg);
+          formatter.error(outStream, errMsg, formatter.MISSING);
           ((FSDataOutputStream) outStream).close();
           outStream = null;
           return 0;
