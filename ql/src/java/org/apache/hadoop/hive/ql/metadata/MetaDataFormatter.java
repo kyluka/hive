@@ -55,12 +55,6 @@ public interface MetaDataFormatter {
     /**
      * Write an error message.
      */
-    public void error(OutputStream out, String msg)
-        throws HiveException;
-
-    /**
-     * Write an error message.
-     */
     public void error(OutputStream out, String msg, int errorCode)
         throws HiveException;
 

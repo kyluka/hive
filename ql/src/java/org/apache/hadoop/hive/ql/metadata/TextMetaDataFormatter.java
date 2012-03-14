@@ -53,23 +53,15 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
     /**
      * Write an error message.
      */
-    public void error(OutputStream out, String msg)
+    public void error(OutputStream out, String msg, int errorCode)
         throws HiveException
     {
         try {
             out.write(msg.getBytes("UTF-8"));
+            out.write(terminator);
         } catch (Exception e) {
             throw new HiveException(e);
         }
-    }
-
-    /**
-     * Write an error message.
-     */
-    public void error(OutputStream out, String msg, int errorCode)
-        throws HiveException
-    {
-        error(out, msg);
     }
 
     /**
@@ -468,9 +460,11 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
         try {
             outStream.writeBytes(database);
             outStream.write(separator);
-            outStream.writeBytes(comment);
+            if (comment != null)
+                outStream.writeBytes(comment);
             outStream.write(separator);
-            outStream.writeBytes(location);
+            if (location != null)
+                outStream.writeBytes(location);
             outStream.write(separator);
             if (params != null && !params.isEmpty()) {
                 outStream.writeBytes(params.toString());
