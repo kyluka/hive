@@ -7,17 +7,24 @@ PREHOOK: query: SHOW TABLES
 PREHOOK: type: SHOWTABLES
 POSTHOOK: query: SHOW TABLES
 POSTHOOK: type: SHOWTABLES
-{"tables":["jsontable","src","src1","src_json","src_sequencefile","src_thrift","srcbucket","srcbucket2","srcpart"]}
+jsontable
+src
+src1
+src_json
+src_sequencefile
+src_thrift
+srcbucket
+srcbucket2
+srcpart
 PREHOOK: query: SHOW TABLES LIKE 'json*'
 PREHOOK: type: SHOWTABLES
 POSTHOOK: query: SHOW TABLES LIKE 'json*'
 POSTHOOK: type: SHOWTABLES
-{"tables":["jsontable"]}
+jsontable
 PREHOOK: query: SHOW TABLE EXTENDED LIKE 'json*'
 PREHOOK: type: SHOW_TABLESTATUS
 POSTHOOK: query: SHOW TABLE EXTENDED LIKE 'json*'
 POSTHOOK: type: SHOW_TABLESTATUS
-{"tables":[]}
 PREHOOK: query: ALTER TABLE jsontable SET TBLPROPERTIES ('id' = 'jsontable')
 PREHOOK: type: ALTERTABLE_PROPERTIES
 PREHOOK: Input: default@jsontable
@@ -30,11 +37,15 @@ PREHOOK: query: DESCRIBE jsontable
 PREHOOK: type: DESCTABLE
 POSTHOOK: query: DESCRIBE jsontable
 POSTHOOK: type: DESCTABLE
-{"columns":[{"name":"key","type":"int"},{"name":"value","type":"string"}]}	 	 
+key	int	
+value	string	
 PREHOOK: query: DESCRIBE extended jsontable
 PREHOOK: type: DESCTABLE
 POSTHOOK: query: DESCRIBE extended jsontable
 POSTHOOK: type: DESCTABLE
+key	int	
+value	string	
+	 	 
 #### A masked pattern was here ####
 PREHOOK: query: DROP TABLE jsontable
 PREHOOK: type: DROPTABLE

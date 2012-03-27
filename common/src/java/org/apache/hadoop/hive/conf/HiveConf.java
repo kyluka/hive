@@ -557,6 +557,7 @@ public class HiveConf extends Configuration {
     HIVE_START_CLEANUP_SCRATCHDIR("hive.start.cleanup.scratchdir", false),
     HIVE_INSERT_INTO_MULTILEVEL_DIRS("hive.insert.into.multilevel.dirs", false),
     HIVE_FILES_UMASK_VALUE("hive.files.umask.vlaue", 0002),
+    HIVE_DDL_OUTPUT_FORMAT("hive.ddl.output.format", "text"),
     ;
 
     public final String varname;
