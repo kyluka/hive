@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.hive.ql.metadata;
+package org.apache.hadoop.hive.ql.metadata.formatting;
 
 import java.io.DataOutputStream;
 import java.io.OutputStream;
@@ -35,6 +35,8 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
@@ -124,67 +126,57 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
          throws HiveException
    {
        try {
-           auxDescribeTable(outStream, colPath, tableName, tbl, part, cols,
-                         isFormatted, isExt);
+         if (colPath.equals(tableName)) {
+           if (!isFormatted) {
+             outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
+           } else {
+             outStream.writeBytes(
+               MetaDataFormatUtils.getAllColumnsInformation(cols,
+                 tbl.isPartitioned() ? tbl.getPartCols() : null));
+           }
+         } else {
+           if (isFormatted) {
+             outStream.writeBytes(MetaDataFormatUtils.getAllColumnsInformation(cols));
+           } else {
+             outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
+           }
+         }
+
+         if (tableName.equals(colPath)) {
+
+           if (isFormatted) {
+             if (part != null) {
+               outStream.writeBytes(MetaDataFormatUtils.getPartitionInformation(part));
+             } else {
+               outStream.writeBytes(MetaDataFormatUtils.getTableInformation(tbl));
+             }
+           }
+
+           // if extended desc table then show the complete details of the table
+           if (isExt) {
+             // add empty line
+             outStream.write(terminator);
+             if (part != null) {
+               // show partition information
+               outStream.writeBytes("Detailed Partition Information");
+               outStream.write(separator);
+               outStream.writeBytes(part.getTPartition().toString());
+               outStream.write(separator);
+               // comment column is empty
+               outStream.write(terminator);
+             } else {
+               // show table information
+               outStream.writeBytes("Detailed Table Information");
+               outStream.write(separator);
+               outStream.writeBytes(tbl.getTTable().toString());
+               outStream.write(separator);
+               outStream.write(terminator);
+             }
+           }     
+         }
        } catch (IOException e) {
            throw new HiveException(e);
        }
-   }
-
-    private void auxDescribeTable(DataOutputStream outStream,
-                                  String colPath, String tableName,
-                                  Table tbl, Partition part, List<FieldSchema> cols,
-                                  boolean isFormatted, boolean isExt)
-        throws HiveException, IOException
-    {
-      if (colPath.equals(tableName)) {
-        if (!isFormatted) {
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
-        } else {
-          outStream.writeBytes(
-            MetaDataFormatUtils.getAllColumnsInformation(cols,
-              tbl.isPartitioned() ? tbl.getPartCols() : null));
-        }
-      } else {
-        if (isFormatted) {
-          outStream.writeBytes(MetaDataFormatUtils.getAllColumnsInformation(cols));
-        } else {
-          outStream.writeBytes(MetaDataFormatUtils.displayColsUnformatted(cols));
-        }
-      }
-
-      if (tableName.equals(colPath)) {
-
-        if (isFormatted) {
-          if (part != null) {
-            outStream.writeBytes(MetaDataFormatUtils.getPartitionInformation(part));
-          } else {
-            outStream.writeBytes(MetaDataFormatUtils.getTableInformation(tbl));
-          }
-        }
-
-        // if extended desc table then show the complete details of the table
-        if (isExt) {
-          // add empty line
-          outStream.write(terminator);
-          if (part != null) {
-            // show partition information
-            outStream.writeBytes("Detailed Partition Information");
-            outStream.write(separator);
-            outStream.writeBytes(part.getTPartition().toString());
-            outStream.write(separator);
-            // comment column is empty
-            outStream.write(terminator);
-          } else {
-            // show table information
-            outStream.writeBytes("Detailed Table Information");
-            outStream.write(separator);
-            outStream.writeBytes(tbl.getTTable().toString());
-            outStream.write(separator);
-            outStream.write(terminator);
-          }
-        }
-      }
     }
 
     public void showTableStatus(DataOutputStream outStream,
@@ -196,96 +188,85 @@ public class TextMetaDataFormatter implements MetaDataFormatter {
         throws HiveException
     {
         try {
-            auxShowTableStatus(outStream, db, conf, tbls, part, par);
+            Iterator<Table> iterTables = tbls.iterator();
+            while (iterTables.hasNext()) {
+              // create a row per table name
+              Table tbl = iterTables.next();
+              String tableName = tbl.getTableName();
+              String tblLoc = null;
+              String inputFormattCls = null;
+              String outputFormattCls = null;
+              if (part != null) {
+                if (par != null) {
+                  if (par.getLocation() != null) {
+                    tblLoc = par.getDataLocation().toString();
+                  }
+                  inputFormattCls = par.getInputFormatClass().getName();
+                  outputFormattCls = par.getOutputFormatClass().getName();
+                }
+              } else {
+                if (tbl.getPath() != null) {
+                  tblLoc = tbl.getDataLocation().toString();
+                }
+                inputFormattCls = tbl.getInputFormatClass().getName();
+                outputFormattCls = tbl.getOutputFormatClass().getName();
+              }
+
+              String owner = tbl.getOwner();
+              List<FieldSchema> cols = tbl.getCols();
+              String ddlCols = MetaStoreUtils.getDDLFromFieldSchema("columns", cols);
+              boolean isPartitioned = tbl.isPartitioned();
+              String partitionCols = "";
+              if (isPartitioned) {
+                partitionCols = MetaStoreUtils.getDDLFromFieldSchema(
+                    "partition_columns", tbl.getPartCols());
+              }
+
+              outStream.writeBytes("tableName:" + tableName);
+              outStream.write(terminator);
+              outStream.writeBytes("owner:" + owner);
+              outStream.write(terminator);
+              outStream.writeBytes("location:" + tblLoc);
+              outStream.write(terminator);
+              outStream.writeBytes("inputformat:" + inputFormattCls);
+              outStream.write(terminator);
+              outStream.writeBytes("outputformat:" + outputFormattCls);
+              outStream.write(terminator);
+              outStream.writeBytes("columns:" + ddlCols);
+              outStream.write(terminator);
+              outStream.writeBytes("partitioned:" + isPartitioned);
+              outStream.write(terminator);
+              outStream.writeBytes("partitionColumns:" + partitionCols);
+              outStream.write(terminator);
+              // output file system information
+              Path tblPath = tbl.getPath();
+              List<Path> locations = new ArrayList<Path>();
+              if (isPartitioned) {
+                if (par == null) {
+                  for (Partition curPart : db.getPartitions(tbl)) {
+                    if (curPart.getLocation() != null) {
+                      locations.add(new Path(curPart.getLocation()));
+                    }
+                  }
+                } else {
+                  if (par.getLocation() != null) {
+                    locations.add(new Path(par.getLocation()));
+                  }
+                }
+              } else {
+                if (tblPath != null) {
+                  locations.add(tblPath);
+                }
+              }
+              if (!locations.isEmpty()) {
+                writeFileSystemStats(outStream, conf, locations, tblPath, false, 0);
+              }
+
+              outStream.write(terminator);
+            }
         } catch (IOException e) {
             throw new HiveException(e);
         }
-    }
-
-    private void auxShowTableStatus(DataOutputStream outStream,
-                                    Hive db,
-                                    HiveConf conf,
-                                    List<Table> tbls,
-                                    Map<String, String> part,
-                                    Partition par)
-        throws HiveException, IOException
-    {
-      Iterator<Table> iterTables = tbls.iterator();
-      while (iterTables.hasNext()) {
-        // create a row per table name
-        Table tbl = iterTables.next();
-        String tableName = tbl.getTableName();
-        String tblLoc = null;
-        String inputFormattCls = null;
-        String outputFormattCls = null;
-        if (part != null) {
-          if (par != null) {
-            if (par.getLocation() != null) {
-              tblLoc = par.getDataLocation().toString();
-            }
-            inputFormattCls = par.getInputFormatClass().getName();
-            outputFormattCls = par.getOutputFormatClass().getName();
-          }
-        } else {
-          if (tbl.getPath() != null) {
-            tblLoc = tbl.getDataLocation().toString();
-          }
-          inputFormattCls = tbl.getInputFormatClass().getName();
-          outputFormattCls = tbl.getOutputFormatClass().getName();
-        }
-
-        String owner = tbl.getOwner();
-        List<FieldSchema> cols = tbl.getCols();
-        String ddlCols = MetaStoreUtils.getDDLFromFieldSchema("columns", cols);
-        boolean isPartitioned = tbl.isPartitioned();
-        String partitionCols = "";
-        if (isPartitioned) {
-          partitionCols = MetaStoreUtils.getDDLFromFieldSchema(
-              "partition_columns", tbl.getPartCols());
-        }
-
-        outStream.writeBytes("tableName:" + tableName);
-        outStream.write(terminator);
-        outStream.writeBytes("owner:" + owner);
-        outStream.write(terminator);
-        outStream.writeBytes("location:" + tblLoc);
-        outStream.write(terminator);
-        outStream.writeBytes("inputformat:" + inputFormattCls);
-        outStream.write(terminator);
-        outStream.writeBytes("outputformat:" + outputFormattCls);
-        outStream.write(terminator);
-        outStream.writeBytes("columns:" + ddlCols);
-        outStream.write(terminator);
-        outStream.writeBytes("partitioned:" + isPartitioned);
-        outStream.write(terminator);
-        outStream.writeBytes("partitionColumns:" + partitionCols);
-        outStream.write(terminator);
-        // output file system information
-        Path tblPath = tbl.getPath();
-        List<Path> locations = new ArrayList<Path>();
-        if (isPartitioned) {
-          if (par == null) {
-            for (Partition curPart : db.getPartitions(tbl)) {
-              if (curPart.getLocation() != null) {
-                locations.add(new Path(curPart.getLocation()));
-              }
-            }
-          } else {
-            if (par.getLocation() != null) {
-              locations.add(new Path(par.getLocation()));
-            }
-          }
-        } else {
-          if (tblPath != null) {
-            locations.add(tblPath);
-          }
-        }
-        if (!locations.isEmpty()) {
-          writeFileSystemStats(outStream, conf, locations, tblPath, false, 0);
-        }
-
-        outStream.write(terminator);
-      }
     }
 
     private void writeFileSystemStats(DataOutputStream outStream,

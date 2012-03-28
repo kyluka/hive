@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hive.ql.metadata;
+package org.apache.hadoop.hive.ql.metadata.formatting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.Map;
  * add non-null entries to the Map.
  */
 public class MapBuilder {
-    private Map map = new HashMap();
+    private Map<String, Object> map = new HashMap<String, Object>();
 
     private MapBuilder() {}
 
@@ -60,7 +60,7 @@ public class MapBuilder {
         return this;
     }
 
-    public Map build() {
+    public Map<String, Object> build() {
         return map;
     }
 }
