@@ -92,12 +92,12 @@ import org.apache.hadoop.hive.ql.metadata.HiveMetaStoreChecker;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
-import org.apache.hadoop.hive.ql.metadata.JsonMetaDataFormatter;
-import org.apache.hadoop.hive.ql.metadata.MetaDataFormatUtils;
-import org.apache.hadoop.hive.ql.metadata.MetaDataFormatter;
 import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.TextMetaDataFormatter;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.metadata.formatting.JsonMetaDataFormatter;
+import org.apache.hadoop.hive.ql.metadata.formatting.MetaDataFormatUtils;
+import org.apache.hadoop.hive.ql.metadata.formatting.MetaDataFormatter;
+import org.apache.hadoop.hive.ql.metadata.formatting.TextMetaDataFormatter;
 import org.apache.hadoop.hive.ql.parse.AlterTablePartMergeFilesDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.ql.plan.AlterDatabaseDesc;
@@ -188,7 +188,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
     // Pick the formatter to use to display the results.  Either the
     // normal human readable output or a json object.
-    if ("json".equals(conf.get("hive.format")))
+    if ("json".equals(conf.get(
+            HiveConf.ConfVars.HIVE_DDL_OUTPUT_FORMAT.varname, "text")))
       formatter = new JsonMetaDataFormatter();
     else
       formatter = new TextMetaDataFormatter();
@@ -393,8 +394,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       LOG.debug(stringifyException(e));
       return 1;
     } catch (AlreadyExistsException e) {
-      formatter.consoleError(console, e.getMessage(),
-                             "\n" + stringifyException(e),
+      formatter.consoleError(console, "Table already exists",
                              formatter.CONFLICT);
       return 1;
     } catch (NoSuchObjectException e) {
@@ -1852,11 +1852,13 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ((FSDataOutputStream) outStream).close();
       outStream = null;
     } catch (FileNotFoundException e) {
-      LOG.info("show partitions: " + stringifyException(e));
-      throw new HiveException(e);
-    } catch (IOException e) {
-      LOG.info("show partitions: " + stringifyException(e));
-      throw new HiveException(e);
+        formatter.logWarn(outStream, "show partitions: " + stringifyException(e),
+                          MetaDataFormatter.ERROR);
+        return 1;
+      } catch (IOException e) {
+        formatter.logWarn(outStream, "show partitions: " + stringifyException(e),
+                          MetaDataFormatter.ERROR);
+        return 1;
     } catch (Exception e) {
       throw new HiveException(e);
     } finally {

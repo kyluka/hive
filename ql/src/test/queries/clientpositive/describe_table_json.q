@@ -1,4 +1,4 @@
-set hive.format=json;
+set hive.ddl.output.format=json;
 
 CREATE TABLE IF NOT EXISTS jsontable (key INT, value STRING) COMMENT 'json table' STORED AS TEXTFILE;
 
@@ -16,4 +16,4 @@ DESCRIBE extended jsontable;
 
 DROP TABLE jsontable;
 
-set hive.format=text;
+set hive.ddl.output.format=text;

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.hive.ql.metadata;
+package org.apache.hadoop.hive.ql.metadata.formatting;
 
 import java.io.DataOutputStream;
 import java.io.OutputStream;
@@ -35,6 +35,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
@@ -51,7 +53,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     /**
      * Convert the map to a JSON string.
      */
-    public void asJson(OutputStream out, Map data)
+    public void asJson(OutputStream out, Map<String, Object> data)
         throws HiveException
     {
         try {
@@ -160,14 +162,14 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         asJson(out, builder.build());
     }
 
-    private List makeColsUnformatted(List<FieldSchema> cols) {
-        ArrayList res = new ArrayList();
+    private List<Map<String, Object>> makeColsUnformatted(List<FieldSchema> cols) {
+        ArrayList<Map<String, Object>> res = new ArrayList<Map<String, Object>>();
         for (FieldSchema col : cols)
             res.add(makeOneColUnformatted(col));
         return res;
     }
 
-    private Map makeOneColUnformatted(FieldSchema col) {
+    private Map<String, Object> makeOneColUnformatted(FieldSchema col) {
         return MapBuilder.create()
             .put("name", col.getName())
             .put("type", col.getType())
@@ -190,7 +192,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .build());
     }
 
-    private List makeAllTableStatus(Hive db,
+    private List<Map<String, Object>> makeAllTableStatus(Hive db,
                                     HiveConf conf,
                                     List<Table> tbls,
                                     Map<String, String> part,
@@ -198,7 +200,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         throws HiveException
     {
         try {
-            ArrayList res = new ArrayList();
+            ArrayList<Map<String, Object>> res = new ArrayList<Map<String, Object>>();
             for (Table tbl : tbls)
                 res.add(makeOneTableStatus(tbl, db, conf, part, par));
             return res;
@@ -207,7 +209,7 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
         }
     }
 
-    private Map makeOneTableStatus(Table tbl,
+    private Map<String, Object> makeOneTableStatus(Table tbl,
                                    Hive db,
                                    HiveConf conf,
                                    Map<String, String> part,
@@ -372,11 +374,11 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
                .build());
     }
 
-    private List makeTablePartions(List<String> parts)
+    private List<Map<String, Object>> makeTablePartions(List<String> parts)
         throws HiveException
     {
         try {
-            ArrayList res = new ArrayList();
+            ArrayList<Map<String, Object>> res = new ArrayList<Map<String, Object>>();
             for (String part : parts)
                 res.add(makeOneTablePartition(part));
             return res;
@@ -386,10 +388,10 @@ public class JsonMetaDataFormatter implements MetaDataFormatter {
     }
 
     // This seems like a very wrong implementation.
-    private Map makeOneTablePartition(String partIdent)
+    private Map<String, Object> makeOneTablePartition(String partIdent)
         throws UnsupportedEncodingException
     {
-        ArrayList<Map> res = new ArrayList<Map>();
+        ArrayList<Map<String, Object>> res = new ArrayList<Map<String, Object>>();
 
         ArrayList<String> names = new ArrayList<String>();
         for (String part : StringUtils.split(partIdent, "/")) {
