@@ -24,19 +24,7 @@ PREHOOK: query: SHOW TABLE EXTENDED LIKE jsontable2
 PREHOOK: type: SHOW_TABLESTATUS
 POSTHOOK: query: SHOW TABLE EXTENDED LIKE jsontable2
 POSTHOOK: type: SHOW_TABLESTATUS
-tableName:jsontable2
 #### A masked pattern was here ####
-inputformat:org.apache.hadoop.mapred.TextInputFormat
-outputformat:org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-columns:struct columns { i32 key, string value, string name}
-partitioned:false
-partitionColumns:
-totalNumberFiles:0
-totalFileSize:0
-maxFileSize:0
-minFileSize:0
-#### A masked pattern was here ####
-
 PREHOOK: query: DROP TABLE jsontable2
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@jsontable2

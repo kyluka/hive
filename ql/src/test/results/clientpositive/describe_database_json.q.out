@@ -16,13 +16,12 @@ PREHOOK: query: SHOW DATABASES
 PREHOOK: type: SHOWDATABASES
 POSTHOOK: query: SHOW DATABASES
 POSTHOOK: type: SHOWDATABASES
-default
-jsondb1
+{"databases":["default","jsondb1"]}
 PREHOOK: query: SHOW DATABASES LIKE 'json*'
 PREHOOK: type: SHOWDATABASES
 POSTHOOK: query: SHOW DATABASES LIKE 'json*'
 POSTHOOK: type: SHOWDATABASES
-jsondb1
+{"databases":["jsondb1"]}
 PREHOOK: query: DROP DATABASE jsondb1
 PREHOOK: type: DROPDATABASE
 POSTHOOK: query: DROP DATABASE jsondb1

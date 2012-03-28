@@ -189,7 +189,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     // Pick the formatter to use to display the results.  Either the
     // normal human readable output or a json object.
     if ("json".equals(conf.get(
-            HiveConf.ConfVars.HIVE_DDL_OUTPUT_FORMAT.name(), "text")))
+            HiveConf.ConfVars.HIVE_DDL_OUTPUT_FORMAT.varname, "text")))
       formatter = new JsonMetaDataFormatter();
     else
       formatter = new TextMetaDataFormatter();

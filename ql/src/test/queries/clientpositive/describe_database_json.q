@@ -1,4 +1,4 @@
-set hive.format=json;
+set hive.ddl.output.format=json;
 
 CREATE DATABASE IF NOT EXISTS jsondb1 COMMENT 'Test database' LOCATION '${hiveconf:hive.metastore.warehouse.dir}/jsondb1' WITH DBPROPERTIES ('id' = 'jsondb1'); 
 
@@ -20,4 +20,4 @@ DESCRIBE DATABASE EXTENDED jsondb1;
 
 DROP DATABASE jsondb1;
 
-set hive.format=text;
+set hive.ddl.output.format=text;
